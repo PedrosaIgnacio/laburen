@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma.service';
-import { logToFile } from 'src/utils/log';
 
 @Injectable()
 export class ProductsService {
@@ -12,7 +11,6 @@ export class ProductsService {
     }
     const embedding = JSON.parse(decodeURIComponent(q)) as number[];
     const vectorString = `[${embedding.join(',')}]`;
-    logToFile(vectorString);
 
     return await this.prisma.$queryRawUnsafe(
       `

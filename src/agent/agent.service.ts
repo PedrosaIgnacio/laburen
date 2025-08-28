@@ -14,7 +14,6 @@ import { ConfigService } from '@nestjs/config';
 import { BufferMemory } from 'langchain/memory';
 import { SYSTEM_PROMPT } from './prompt';
 import * as dotenv from 'dotenv';
-import { logToFile } from 'src/utils/log';
 dotenv.config();
 
 interface CartAwareTool {
@@ -45,21 +44,8 @@ class GetProductsTool extends Tool {
       );
       return JSON.stringify(response.data);
     } catch (error) {
-      logToFile(`Error:  ${error}`);
       return null;
     }
-  }
-  private calculateAverageEmbedding(embeddings: number[][]): number[] {
-    const dimensions = embeddings[0].length;
-    const avgEmbedding = new Array(dimensions).fill(0);
-
-    embeddings.forEach((embedding) => {
-      embedding.forEach((value, index) => {
-        avgEmbedding[index] += value / embeddings.length;
-      });
-    });
-
-    return avgEmbedding;
   }
 }
 
@@ -86,25 +72,28 @@ class CreateCartTool extends Tool implements CartAwareTool {
   agentService?: AgentService;
   name: string = 'create_cart';
   description: string =
-    'Create a new cart with items: list of {productId, quantity}.';
+    'Create a new cart with items: list of {product_id, quantity}.';
   constructor(private apiBase: string) {
     super();
   }
   async _call(input: string) {
     try {
       const parsedJson = JSON.parse(input);
-      const items = parsedJson.items.map((i) => ({
-        product_id: Number(i.product_id),
+      const cartItems = parsedJson.items.map((i) => ({
+        product_id: String(i.product_id),
         qty: Number(i.quantity),
       }));
-      const response = await axios.post(`${this.apiBase}/carts`, { items });
+
+      const response = await axios.post(`${this.apiBase}/carts`, {
+        items: [...cartItems],
+      });
 
       if (this.agentService) {
         this.agentService.currentCartId = response.data.id;
       }
 
       return response.data;
-    } catch {
+    } catch (error) {
       return null;
     }
   }
@@ -114,7 +103,7 @@ class UpdateCartTool extends Tool implements CartAwareTool {
   agentService?: AgentService;
   name: string = 'update_cart';
   description: string =
-    'Update cart with new items list: {cartId, items}. qty=0 removes.';
+    'Update cart with new items list: {cartId, items}. quantity=0 removes.';
   constructor(private apiBase: string) {
     super();
   }

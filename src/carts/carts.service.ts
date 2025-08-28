@@ -14,7 +14,6 @@ export class CartsService {
 
   async createCart(dto: UpsertCartDto) {
     if (!dto.items?.length) throw new BadRequestException('items required');
-
     return this.prisma.$transaction(async (tx) => {
       for (const it of dto.items) {
         const p = await tx.product.findUnique({ where: { id: it.product_id } });

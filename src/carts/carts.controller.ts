@@ -19,8 +19,8 @@ export class CartsController {
 
   @Post()
   async create(@Body() dto: UpsertCartDto, @Res() res: Response) {
-    await this.svc.createCart(dto);
-    return res.status(HttpStatusCode.Created);
+    const result = await this.svc.createCart(dto);
+    return res.status(HttpStatusCode.Created).json(result);
   }
 
   @Patch(':id')
