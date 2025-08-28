@@ -6,17 +6,21 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Res,
 } from '@nestjs/common';
 import { CartsService } from './carts.service';
 import { UpsertCartDto } from './dto/cart-items.dto';
+import { Response } from 'express';
+import { HttpStatusCode } from 'axios';
 
 @Controller('carts')
 export class CartsController {
   constructor(private svc: CartsService) {}
 
   @Post()
-  create(@Body() dto: UpsertCartDto) {
-    return this.svc.createCart(dto);
+  async create(@Body() dto: UpsertCartDto, @Res() res: Response) {
+    await this.svc.createCart(dto);
+    return res.status(HttpStatusCode.Created);
   }
 
   @Patch(':id')
